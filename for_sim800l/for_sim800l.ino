@@ -10,7 +10,16 @@ void setup() {
   Serial.println("System Started...");
   sim.begin(9600);
   delay(1000);
+  sim.println("AT"); //Once the handshake test is successful, it will back to OK
+  updateSerial();
+  sim.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  updateSerial();
+  sim.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  updateSerial();
+  sim.println("AT+CREG?"); //Check whether it has registered in the network
+  updateSerial();
   Serial.println("Type s to send an SMS, r to receive an SMS, and c to make a Call");
+  
 }
 void loop() {
   if (Serial.available() > 0)
@@ -28,6 +37,18 @@ void loop() {
     }
   if (sim.available() > 0)
     Serial.write(sim.read());
+}
+void updateSerial()
+{
+  delay(500);
+  while (Serial.available()) 
+  {
+    sim.write(Serial.read());//Forward what Serial received to Software Serial Port
+  }
+  while(sim.available()) 
+  {
+    Serial.write(sim.read());//Forward what Software Serial received to Serial Port
+  }
 }
 void SendMessage()
 {
