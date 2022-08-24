@@ -1,27 +1,33 @@
 #include <SoftwareSerial.h>
 SoftwareSerial sim(6,5); //tx,rx
+// setup pins
+const char BUTTON_PIN = 7;
+bool pressed = false;
 int _timeout;
 String _buffer;
-String number = "+916394430761"; 
+String number = "+916393339090"; 
 void setup() {
   delay(7000); //delay for 7 seconds to make sure the modules get the signal
   Serial.begin(9600);
+  // Setup pin modes
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   _buffer.reserve(50);
   Serial.println("System Started...");
   sim.begin(9600);
   delay(1000);
-  sim.println("AT"); //Once the handshake test is successful, it will back to OK
-  updateSerial();
-  sim.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
-  updateSerial();
-  sim.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
-  updateSerial();
-  sim.println("AT+CREG?"); //Check whether it has registered in the network
-  updateSerial();
   Serial.println("Type s to send an SMS, r to receive an SMS, and c to make a Call");
   
 }
 void loop() {
+  // Read button
+  bool currentState = digitalRead(BUTTON_PIN);
+
+  if (currentState == pressed) {
+    callNumber();
+    while(digitalRead(BUTTON_PIN) == pressed) {
+      // DO nothing while button is pressed
+    }
+  }
   if (Serial.available() > 0)
     switch (Serial.read())
     {
@@ -38,18 +44,7 @@ void loop() {
   if (sim.available() > 0)
     Serial.write(sim.read());
 }
-void updateSerial()
-{
-  delay(500);
-  while (Serial.available()) 
-  {
-    sim.write(Serial.read());//Forward what Serial received to Software Serial Port
-  }
-  while(sim.available()) 
-  {
-    Serial.write(sim.read());//Forward what Software Serial received to Serial Port
-  }
-}
+
 void SendMessage()
 {
   //Serial.println ("Sending Message");
